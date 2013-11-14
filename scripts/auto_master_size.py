@@ -1,14 +1,37 @@
+import errno
+import os
+import subprocess
+import sys
+import time
+
+def auto_master(spec_dir):
+    spec_sizes = {}
+    while True: #spec_sizes == {}:
+        print 'Updating...'
+        spec_files = os.listdir(spec_dir)
+        spec_files = [item for item in spec_files if item.endswith('.spc')]
+        for item in spec_files:
+            full_item = os.path.join(spec_dir, item)
+            edit_size = os.path.getsize(full_item)
+            if item not in spec_sizes:
+                spec_sizes[item] = edit_size
+                subprocess.call([sys.executable,
+                                 'C:\\apps\\tdl\\scripts\\spectohdf.py',
+                                 full_item, '', '-a'])
+            else:
+                if spec_sizes[item] < edit_size:
+                    spec_sizes[item] = edit_size
+                    subprocess.call([sys.executable,
+                                    'C:\\apps\\tdl\\scripts\\spectohdf.py',
+                                     full_item, '', '-a'])
+        time.sleep(20)
+    
 """
 File Locker
 Author: Evan Fosmark
 http://www.evanfosmark.com/2009/01/cross-platform-file-locking-support-in-python
 Last modified: 7.16.2012 by Craig Biwer (cbiwer@uchicago.edu)
 """
-
-
-import os
-import time
-import errno
  
 class FileLockException(Exception):
     pass
@@ -90,3 +113,8 @@ class FileLock(object):
             lying around.
         """
         self.release()
+
+
+if __name__ == '__main__':
+    args = sys.argv[1:]
+    auto_master(*args)

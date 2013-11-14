@@ -37,7 +37,7 @@ from tdl.modules.utils import plotter
 from tdl.modules.utils.mathutil import cosd, sind, tand
 from tdl.modules.utils.mathutil import arccosd, arcsind, arctand
 
-from tdl.modules.ana import image_data
+#from tdl.modules.ana import image_data
 from tdl.modules.geom.active_area import active_area
 from tdl.modules.geom import gonio_psic 
 
@@ -907,7 +907,7 @@ def sort_data(ctr,hkdecimal=3):
 
 ##############################################################################
 def image_point_F(scan,point,I='I',Inorm='io',Ierr='Ierr',Ibgr='Ibgr',
-                  corr_params={}):
+                  corr_params={}, preparsed=False):
     """
     compute F for a single scan point in an image scan
     """
@@ -925,7 +925,7 @@ def image_point_F(scan,point,I='I',Inorm='io',Ierr='Ierr',Ibgr='Ibgr',
         scale  = corr_params.get('scale')
         if scale == None: scale = 1.
         scale  = float(scale)
-        corr = _get_corr(scan,point,corr_params)
+        corr = _get_corr(scan,point,corr_params, preparsed)
         if corr == None:
             d['ctot'] = 1.0
         else:
@@ -938,15 +938,13 @@ def image_point_F(scan,point,I='I',Inorm='io',Ierr='Ierr',Ibgr='Ibgr',
         d['F']    = 0.0
         d['Ferr'] = 0.0
     else:
-        yn     = scale*d['I']/d['Inorm']
-        yn_err = yn * num.sqrt( (d['Ierr']/d['I'])**2. + 1./d['Inorm'] )
-        d['F']    = num.sqrt(d['ctot']*yn)
-        d['Ferr'] = num.sqrt(d['ctot']*yn_err)
-    
+        scale = scale * d['ctot']/d['Inorm']
+        d['F']    = num.sqrt(scale*d['I'])
+        d['Ferr'] = 0.5 * scale**0.5 * d['Ierr']/d['I']**0.5
     return d
 
 ##############################################################################
-def _get_corr(scan,point,corr_params):
+def _get_corr(scan,point,corr_params,preparsed=False):
     """
     get CtrCorrection instance
     """
@@ -956,7 +954,7 @@ def _get_corr(scan,point,corr_params):
     sample = corr_params.get('sample')
     # get gonio instance for corrections
     if geom == 'psic':
-        gonio = gonio_psic.psic_from_spec(scan['G'])
+        gonio = gonio_psic.psic_from_spec(scan['G'],preparsed=preparsed)
         _update_psic_angles(gonio,scan,point)
         corr  = CtrCorrectionPsic(gonio=gonio,beam_slits=beam,
                                   det_slits=det,sample=sample)
