@@ -29,7 +29,10 @@ import scipy.io.netcdf
 from scipy.io.netcdf import netcdf_file
 import scipy.constants
 
+from tdl.pds import menu
+
 loadlib =  ctypes.windll.LoadLibrary
+
 
 # larch library bits...
 # from larch.larchlib import get_dll
@@ -39,6 +42,55 @@ loadlib =  ctypes.windll.LoadLibrary
 matplotlib.use('WXAgg')
 mpl_data_files = matplotlib.get_py2exe_datafiles()
 # import wxmplot
+
+pycard_incs = ['PythonCard', 'PythonCard.model', 'PythonCard.dialog',
+               'PythonCard.components.bitmapcanvas',
+               'PythonCard.components.button',
+               'PythonCard.components.calendar',
+               'PythonCard.components.checkbox',
+               'PythonCard.components.choice',
+               'PythonCard.components.codeeditor',
+               'PythonCard.components.combobox',
+               'PythonCard.components.container',
+               'PythonCard.components.floatcanvas',
+               'PythonCard.components.gauge',
+               'PythonCard.components.grid',
+               'PythonCard.components.htmlwindow',
+               'PythonCard.components.iehtmlwindow',
+               'PythonCard.components.image',
+               'PythonCard.components.imagebutton',
+               'PythonCard.components.list',
+               'PythonCard.components.multicolumnlist',
+               'PythonCard.components.notebook',
+               'PythonCard.components.passwordfield',
+               'PythonCard.components.radiogroup',
+               'PythonCard.components.slider',
+               'PythonCard.components.spinner',
+               'PythonCard.components.staticbox',
+               'PythonCard.components.staticline',
+               'PythonCard.components.statictext',
+               'PythonCard.components.textarea',
+               'PythonCard.components.textfield',
+               'PythonCard.components.togglebutton',
+               'PythonCard.components.tree']
+
+tdl_incs = ['tdl.modules.ana',
+            'tdl.modules.ana_upgrade',
+            'tdl.modules.geom',
+            'tdl.modules.peak',
+            'tdl.modules.specfile',
+            'tdl.modules.spectra',
+            'tdl.modules.sxrd',
+            'tdl.modules.utils',
+            'tdl.modules.utils.files',
+            'tdl.modules.utils.mpfit',
+            'tdl.modules.xrd',
+            'tdl.modules.xrf',
+            'tdl.modules.xrr',
+            'tdl.modules.xtab',
+            'tdl.modules.xtal',
+            'tdl.pds.pcgui',
+            'tdl.pds.menu']
 
 
 
@@ -104,32 +156,32 @@ style_xml = """
 
 windows_apps = [{'script': 'runpds.py',
                  'icon_resources': [(0, 'TDL.ico')],
-                 # 'other_resources': [(24, 1, style_xml)],
+                 'other_resources': [(24, 1, style_xml)],
                  },
                 ]
 
 
 py2exe_opts = {'optimize':1,
                'bundle_files':2,
-               'includes': ['ConfigParser', 'Image', 'ctypes', 
-                            'fpformat', 'h5py',
+               'includes': ['ConfigParser', 'Image', 'ctypes',
+                            'fpformat', 'h5py', 'Ifeffit',
                             'h5py._objects', 'h5py._proxy', 'h5py.defs',
                             'h5py.utils', 'matplotlib', 'numpy', 'scipy',
                             'scipy.constants', 'scipy.fftpack',
                             'scipy.io.matlab.mio5_utils',
                             'scipy.io.matlab.streams', 'scipy.io.netcdf',
-                            'scipy.optimize', 'scipy.signal', 
+                            'scipy.optimize', 'scipy.signal',
                             'sqlite3', 'wx', 'wx._core',
                             'wx.lib', 'wx.lib.agw',
                             'wx.lib.agw.flatnotebook',
                             'wx.lib.colourselect', 'wx.lib.masked',
                             'wx.lib.mixins', 'wx.lib.mixins.inspection',
                             'wx.lib.agw.pycollapsiblepane',
-                            'wx.lib.newevent', 'wx.py', 
+                            'wx.lib.newevent', 'wx.py',
                             'wxversion', 'xdrlib', 'xml.etree',
                             'xml.etree.cElementTree'],
                'packages': ['h5py', 'scipy.optimize', 'scipy.signal', 'scipy.io',
-                            'numpy.random', 'xml.etree', 'xml.etree.cElementTree'], 
+                            'numpy.random', 'xml.etree', 'xml.etree.cElementTree'],
                'excludes': ['Tkinter', '_tkinter', 'Tkconstants', 'tcl',
                             '_imagingtk', 'PIL._imagingtk', 'ImageTk',
                             'PIL.ImageTk', 'FixTk''_gtkagg', '_tkagg',
@@ -139,12 +191,13 @@ py2exe_opts = {'optimize':1,
                                 'libgdk-win32-2.0-0.dll',
                                 'libgobject-2.0-0.dll', 'libzmq.dll']
                }
-
+py2exe_opts['includes'].extend(pycard_incs)
+py2exe_opts['includes'].extend(tdl_incs)
 setup(name = "TDL",
       windows = windows_apps,
       options = {'py2exe': py2exe_opts},
       data_files = mpl_data_files)
- 
+
 for fname in extra_files:
     path, name = os.path.split(fname)
     print fname, name
@@ -153,6 +206,20 @@ for fname in extra_files:
     except:
         pass
 
+
+
+def sys(cmd):
+    print ' >> ', cmd
+    os.system(cmd)
+
+try:
+    os.makedirs("dist/tdl/")
+    os.makedirs("dist/tdl/modules")
+except:
+    pass
+sys("cp -pr ../modules   dist/tdl/." )
+sys("cp -pr ../pds/startup.pds   dist/tdl/." )
+sys("cp -pr ../dlls/win32/* dist/.")
 
 if __name__ == '__main__':
     print 'usage:  python py2exe_build.py py2exe'
